@@ -26,7 +26,7 @@ function MainScreen() {
       <div className="flex justify-center mt-8 md:mt-8 md:block md:absolute md:top-0 md:right-0 md:m-8">
         <button
           onClick={() => navigate("/write")}
-          className="p-3 w-40 border-[#333333] transition-colors duration-300 ease-in-out hover:bg-[#333333] hover:text-white border-3 rounded-full patrick-hand-regular flex justify-center items-center gap-2 cursor-pointer"
+          className="p-3 w-40 border-[#333333] transition-colors duration-300 ease-in-out hover:bg-[#333333] hover:text-white border-2 md:border-3 rounded-full patrick-hand-regular flex justify-center items-center gap-2 cursor-pointer"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
@@ -66,8 +66,48 @@ function MainScreen() {
       )}
     </div>
 
-    <div className="bg-black min-h-screen">
+    <div className="bg-black min-h-screen flex flex-col lg:flex-row justify-center items-center gap-10 lg:gap-20 p-8 md:p-16 lg:p-24">
+  
+      {/* Left Column - Heading */}
+      <div className="w-full lg:w-1/2 flex justify-center lg:justify-end">
+        <h1 className="gloria-hallelujah-regular text-white text-3xl md:text-4xl max-w-sm uppercase leading-relaxed text-center lg:text-left">
+          Some thoughts were buried alive the moment you realized they would change nothing.
+        </h1>
+      </div>
 
+      {/* Right Column - Paragraph */}
+      <div className="w-full lg:w-1/2 flex justify-center lg:justify-start">
+        <p className="nanum-pen-script-regular text-white text-base md:text-lg max-w-lg text-center lg:text-left leading-relaxed">
+          Before you enter, understand this:<br /><br />
+          
+          Every thought in this place survived a war inside someone's heart. These are the words people rehearsed a thousand times in the shower, on late-night walks, in front of glowing screens, and beside hospital beds. They were carried for years, hidden behind forced smiles, swallowed by pride, fear, timing, or the certainty that nobody would listen.<br /><br />
+          
+          Some were meant for lovers who became strangers. Some were meant for parents who never understood. Some were meant for friends who drifted away, and some were meant for people who are no longer alive to hear them. This museum does not preserve artifacts. It preserves absences.<br /><br />
+          
+          The apology that arrived too late. The confession that never left trembling lips. The goodbye that was stolen by time. The "I love you" buried beneath silence. The "please stay" that remained trapped in a racing mind. As you walk through these thoughts, remember that every unsaid word leaves a mark. Not because it was spoken, but because it wasn't.<br /><br />
+          
+          Welcome to a collection of ghosts.<br /><br />
+          
+          Take your time.<br />
+          &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;June 24, 2026
+        </p>
+      </div>
+    </div>
+
+    {/*Rant collection*/}
+    <div className="min-h-screen relative m-5">
+      <div className="flex flex-row items-center">
+        <h1 className="text-[#333333] patrick-hand-regular text-2xl md:text-3xl p-4">Rant Collections</h1>
+          <button
+            onClick={() => navigate("/write")}
+            className="p-2 w-25 absolute m-4 right-0 border-[#333333] transition-colors duration-300 ease-in-out hover:bg-[#333333] hover:text-white border-2 md:border-3 rounded-full patrick-hand-regular flex justify-center items-center gap-2 cursor-pointer"
+          >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+          </svg>
+          Rant
+        </button>
+      </div>
     </div>
     </>
   );
