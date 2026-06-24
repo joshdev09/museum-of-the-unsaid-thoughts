@@ -1,12 +1,76 @@
-function MainScreen(){
-    return(
-        <div className="flex justify-center items">
-            <div className="flex flex-col items-center">
-                <h1 className="text-[#333333] patrick-hand-regular text-6xl p-4">Museum of the Unsaid Thoughts</h1>
-                <p className="text-[#333333] gloria-hallelujah-regular text-lg">Some people leave our lives carrying answers to questions we never had the courage to ask...</p>
-            </div>
+import { useNavigate } from "react-router-dom";
+import { useThoughts } from "../context/ThoughtsContext";
+import PolaroidCard from "./PolaroidCard";
+
+function MainScreen() {
+  const navigate = useNavigate();
+  const { thoughts } = useThoughts();
+
+  return (
+    <>
+    <div className="relative min-h-screen pt-5 pb-10">
+      
+      {/* Header text */}
+      <div className="flex justify-center px-4 text-center">
+        <div className="flex flex-col items-center max-w-3xl">
+          <h1 className="text-[#333333] patrick-hand-regular text-4xl md:text-6xl p-4">
+            Museum of the Unsaid Thoughts
+          </h1>
+          <p className="text-[#333333] gloria-hallelujah-regular text-base md:text-lg">
+            Some people leave our lives carrying answers to questions we never had the courage to ask...
+          </p>
         </div>
-    )
+      </div>
+
+      {/* Write a thought button */}
+      <div className="flex justify-center mt-8 md:mt-8 md:block md:absolute md:top-0 md:right-0 md:m-8">
+        <button
+          onClick={() => navigate("/write")}
+          className="p-3 w-40 border-[#333333] transition-colors duration-300 ease-in-out hover:bg-[#333333] hover:text-white border-3 rounded-full patrick-hand-regular flex justify-center items-center gap-2 cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+          </svg>
+          Write a thought
+        </button>
+      </div>
+
+      {/* Polaroid canvas */}
+      {thoughts.length === 0 ? (
+        <div className="flex flex-col items-center justify-center mt-20 gap-3 opacity-40 select-none">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1" stroke="#888" className="size-12">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+          </svg>
+          <p className="gloria-hallelujah-regular text-[#999] text-sm text-center max-w-xs">
+            The wall is empty. Be the first to leave a thought.
+          </p>
+        </div>
+      ) : (
+        <div
+          className="relative mx-auto mt-10"
+          style={{ width: "90vw", minHeight: "70vh" }}
+        >
+          {thoughts.map((thought) => (
+            <div
+              key={thought.id}
+              className="absolute transition-transform duration-300 hover:scale-105 hover:z-10"
+              style={{
+                left: `${thought.x}%`,
+                top: `${thought.y}%`,
+              }}
+            >
+              <PolaroidCard thought={thought} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <div className="bg-black min-h-screen">
+
+    </div>
+    </>
+  );
 }
 
-export default MainScreen
+export default MainScreen;
