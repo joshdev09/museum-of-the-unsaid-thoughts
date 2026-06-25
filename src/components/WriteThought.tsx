@@ -18,7 +18,7 @@ function AlignGrid({ alignH, alignV, onChange }: {
   onChange: (h: TextAlignH, v: TextAlignV) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-[3px] w-[76px]">
+    <div className="grid grid-cols-3 gap-0.75 w-19">
       {ALIGN_CELLS.map(({ h, v }) => {
         const active = h === alignH && v === alignV;
         return (
@@ -50,7 +50,7 @@ const TEXT_COLORS = [
 
 function ColorSwatches({ value, onChange }: { value: string; onChange: (c: string) => void }) {
   return (
-    <div className="flex flex-wrap gap-[5px] w-30">
+    <div className="flex flex-wrap gap-0.75 w-30">
       {TEXT_COLORS.map(({ hex, label }) => (
         <button
           key={hex}
