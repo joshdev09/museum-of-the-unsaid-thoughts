@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import sql from "../src/storage/db";
-import { uploadImage } from "../src/storage/storage";
+import sql from "../src/storage/db.js";
+import { uploadImage } from "../src/storage/storage.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Allow requests from your frontend origin

@@ -50,7 +50,7 @@ const TEXT_COLORS = [
 
 function ColorSwatches({ value, onChange }: { value: string; onChange: (c: string) => void }) {
   return (
-    <div className="flex flex-wrap gap-[5px]">
+    <div className="flex flex-wrap gap-[5px] w-30">
       {TEXT_COLORS.map(({ hex, label }) => (
         <button
           key={hex}
