@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useThoughts } from "../context/ThoughtsContext";
 import PolaroidCard from "./PolaroidCard";
 import { DEFAULT_IMAGES } from "../assets/defaultImages";
+import { uploadImageToStorage } from "../storage/storage";
 import { type Thought, type TextAlignH, type TextAlignV, type PolaroidSize, type TextSize } from "../types/thought";
 
 // ── Alignment grid ────────────────────────────────────────────────────────────
@@ -18,7 +19,7 @@ function AlignGrid({ alignH, alignV, onChange }: {
   onChange: (h: TextAlignH, v: TextAlignV) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-0.75 w-19">
+    <div className="grid grid-cols-3 gap-[3px] w-[76px]">
       {ALIGN_CELLS.map(({ h, v }) => {
         const active = h === alignH && v === alignV;
         return (
@@ -50,7 +51,7 @@ const TEXT_COLORS = [
 
 function ColorSwatches({ value, onChange }: { value: string; onChange: (c: string) => void }) {
   return (
-    <div className="flex flex-wrap gap-0.75 w-30">
+    <div className="flex flex-wrap gap-[5px]">
       {TEXT_COLORS.map(({ hex, label }) => (
         <button
           key={hex}
@@ -142,6 +143,7 @@ function WriteThought() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedImage, setSelectedImage] = useState<string>(DEFAULT_IMAGES[0].src);
+  const [uploadedFile,  setUploadedFile  ] = useState<File | null>(null);
   const [text,          setText         ] = useState("");
   const [alignH,        setAlignH       ] = useState<TextAlignH>("center");
   const [alignV,        setAlignV       ] = useState<TextAlignV>("bottom");
@@ -164,15 +166,15 @@ function WriteThought() {
   const handleUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      if (typeof ev.target?.result === "string") setSelectedImage(ev.target.result);
-    };
-    reader.readAsDataURL(file);
+    setUploadedFile(file);
+    // Show preview via object URL (no base64, no memory bloat)
+    const previewUrl = URL.createObjectURL(file);
+    setSelectedImage(previewUrl);
   };
 
   const handleRemovePhoto = () => {
     setSelectedImage(DEFAULT_IMAGES[0].src);
+    setUploadedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -181,11 +183,13 @@ function WriteThought() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await addThought({ text: text.trim(), image: selectedImage, alignH, alignV, textColor, polaroidSize, textSize });
+      // Upload image directly from browser → Supabase Storage (bypasses Vercel 4.5MB limit)
+      const imageUrl = await uploadImageToStorage(uploadedFile ?? selectedImage);
+      await addThought({ text: text.trim(), image: imageUrl, alignH, alignV, textColor, polaroidSize, textSize });
       setSubmitted(true);
       setTimeout(() => navigate("/"), 1200);
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : "Something went wrong");
+      setSubmitError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
