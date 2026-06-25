@@ -58,20 +58,47 @@ function MainScreen() {
             </p>
           </div>
         ) : (
-          <div
-            className="relative mx-auto mt-10"
-            style={{ width: "90vw", minHeight: "70vh" }}
-          >
-            {thoughts.map((thought) => (
+          <>
+            {/* ── Mobile: horizontal scroll strip ── */}
+            <div className="md:hidden mt-10 w-full">
               <div
-                key={thought.id}
-                className="absolute transition-transform duration-300 hover:scale-105 hover:z-10"
-                style={{ left: `${thought.x}%`, top: `${thought.y}%` }}
+                className="flex flex-row gap-6 px-6 overflow-x-auto pb-6"
+                style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
               >
-                <PolaroidCard thought={thought} />
+                {thoughts.map((thought) => (
+                  <div
+                    key={thought.id}
+                    className="flex-shrink-0 transition-transform duration-300 active:scale-105"
+                    style={{
+                      scrollSnapAlign: "center",
+                      transform: `rotate(${thought.rotation}deg)`,
+                    }}
+                  >
+                    <PolaroidCard thought={thought} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+              <p className="text-center text-xs text-[#bbb] patrick-hand-regular mt-1 select-none">
+                swipe to explore →
+              </p>
+            </div>
+
+            {/* ── Desktop: scattered absolute canvas ── */}
+            <div
+              className="hidden md:block relative mx-auto mt-10"
+              style={{ width: "90vw", minHeight: "70vh" }}
+            >
+              {thoughts.map((thought) => (
+                <div
+                  key={thought.id}
+                  className="absolute transition-transform duration-300 hover:scale-105 hover:z-10"
+                  style={{ left: `${thought.x}%`, top: `${thought.y}%` }}
+                >
+                  <PolaroidCard thought={thought} />
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
