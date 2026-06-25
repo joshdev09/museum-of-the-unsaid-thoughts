@@ -1,13 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { useThoughts } from "../context/ThoughtsContext";
 import PolaroidCard from "./PolaroidCard";
+import "../scrollbar.css";
 
 function MainScreen() {
   const navigate = useNavigate();
   const { thoughts, loading, error } = useThoughts();
 
   return (
-    <>
+    <div className="w-full overflow-x-hidden">
+
       {/* ── Section 1: Polaroid wall ─────────────────────────────────── */}
       <div className="relative min-h-screen pt-5 pb-10">
 
@@ -59,26 +61,78 @@ function MainScreen() {
           </div>
         ) : (
           <>
-            {/* ── Mobile: horizontal scroll strip ── */}
-            <div className="md:hidden mt-10 w-full">
-              <div
-                className="flex flex-row gap-6 px-6 overflow-x-auto pb-6"
-                style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
-              >
-                {thoughts.map((thought) => (
-                  <div
-                    key={thought.id}
-                    className="flex-shrink-0 transition-transform duration-300 active:scale-105"
-                    style={{
-                      scrollSnapAlign: "center",
-                      transform: `rotate(${thought.rotation}deg)`,
-                    }}
-                  >
-                    <PolaroidCard thought={thought} />
-                  </div>
-                ))}
+            {/* ── Mobile: hanging string + horizontal scroll ── */}
+            <div className="md:hidden mt-6 w-full">
+
+              {/* String SVG — stretches full width */}
+              <div className="w-full px-2 select-none pointer-events-none" aria-hidden>
+                <svg
+                  width="100%"
+                  height="28"
+                  viewBox="0 0 400 28"
+                  preserveAspectRatio="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {/* The sagging string */}
+                  <path
+                    d="M 0 4 Q 100 22 200 6 Q 300 -8 400 4"
+                    fill="none"
+                    stroke="#b0a090"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                  />
+                  {/* Knot dots evenly spaced */}
+                  {[40, 120, 200, 280, 360].map((cx) => (
+                    <circle key={cx} cx={cx} cy={cx === 200 ? 7 : cx < 200 ? 15 : 10} r="2.2" fill="#b0a090" />
+                  ))}
+                </svg>
               </div>
-              <p className="text-center text-xs text-[#bbb] patrick-hand-regular mt-1 select-none">
+
+              {/* Scrollable strip — hidden scrollbar, padding so tilted cards don't clip */}
+              <div
+                className="hide-scrollbar flex flex-row gap-8 px-8 overflow-x-auto"
+                style={{
+                  scrollSnapType: "x mandatory",
+                  WebkitOverflowScrolling: "touch",
+                  paddingTop: "16px",
+                  paddingBottom: "32px",
+                  /* hide scrollbar cross-browser */
+                  msOverflowStyle: "none",
+                  scrollbarWidth: "none",
+                }}
+              >
+                {thoughts.map((thought, i) => {
+                  // Alternate clips — odd cards hang lower to follow string sag
+                  const hangOffset = i % 2 === 0 ? 0 : 12;
+                  return (
+                    <div
+                      key={thought.id}
+                      className="flex-shrink-0 flex flex-col items-center"
+                      style={{ scrollSnapAlign: "center", marginTop: hangOffset }}
+                    >
+                      {/* Tiny clip pin */}
+                      <div
+                        className="w-3 h-3 rounded-full border border-[#aaa] bg-white shadow-sm mb-[-4px] z-10 relative"
+                        style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}
+                      />
+                      {/* Short string from clip to polaroid */}
+                      <div className="w-px h-4 bg-[#c0b0a0]" />
+                      {/* Polaroid with tilt — wrapped so clip always stays at top */}
+                      <div
+                        className="transition-transform duration-300 active:scale-105"
+                        style={{ transform: `rotate(${thought.rotation}deg)` }}
+                      >
+                        <PolaroidCard thought={thought} />
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* Trailing spacer so last card isn't flush against edge */}
+                <div className="flex-shrink-0 w-4" />
+              </div>
+
+              {/* Swipe hint */}
+              <p className="text-center text-xs text-[#bbb] patrick-hand-regular select-none -mt-4">
                 swipe to explore →
               </p>
             </div>
@@ -146,7 +200,8 @@ function MainScreen() {
           </button>
         </div>
       </div>
-    </>
+
+    </div>
   );
 }
 

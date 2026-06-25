@@ -227,7 +227,7 @@ function WriteThought() {
           {/* Choose a photo */}
           <div>
             <label className="patrick-hand-regular text-[#555] text-sm block mb-2">Choose a photo</label>
-            <div className="grid grid-cols-3 gap-2 mb-3 max-h-52 overflow-y-auto pr-1">
+            <div className="grid grid-cols-3 gap-2 mb-3 max-h-70 overflow-y-auto pr-1">
               {DEFAULT_IMAGES.map((img) => (
                 <button
                   key={img.id}
@@ -279,7 +279,7 @@ function WriteThought() {
               rows={3}
               maxLength={200}
               placeholder="Write what you never got to say..."
-              className="w-full border border-[#ccc] rounded-lg px-4 py-2 gloria-hallelujah-regular text-[#333] text-sm resize-none focus:outline-none focus:border-[#555] bg-white placeholder:text-[#bbb]"
+              className="w-full h-30 border border-[#ccc] rounded-lg px-4 py-2 gloria-hallelujah-regular text-[#333] text-sm resize-none focus:outline-none focus:border-[#555] bg-white placeholder:text-[#bbb]"
             />
             <p className="text-right text-xs text-[#bbb] mt-0.5 patrick-hand-regular">{text.length} / 200</p>
           </div>
