@@ -43,7 +43,7 @@ function PolaroidModal({ thought, onClose }: { thought: Thought; onClose: () => 
   const dragState  = useRef({ dragging: false, startX: 0, startY: 0, offsetX: 0, offsetY: 0 });
   const [pos,       setPos      ] = useState({ x: 0, y: 0 });
   const [rotation,  setRotation ] = useState(0);
-  const [flipped,   setFlipped  ] = useState(false);
+  const [flipped] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const isTouchDevice = typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
 
@@ -142,7 +142,7 @@ function PolaroidModal({ thought, onClose }: { thought: Thought; onClose: () => 
               draggable={false}
             />
             {/* Text overlay */}
-            {thought.text && !flipped && (
+            {thought.text && (
               <div
                 className={`absolute inset-0 flex flex-col px-3 py-3 ${vJustifyClass[alignV]} ${hAlignClass[alignH]}`}
               >
