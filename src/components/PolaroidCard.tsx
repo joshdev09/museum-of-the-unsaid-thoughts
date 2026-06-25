@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { type Thought, type TextAlignH, type TextAlignV, type PolaroidSize, type TextSize } from "../types/thought";
 
 interface PolaroidCardProps {
@@ -37,8 +38,9 @@ const textSizeMultiplier: Record<TextSize, number> = {
   lg: 1.85,
 };
 
-// ── 3D Inspectable Modal ───────────────────────────────────────────────────────
+// ── 3D Inspectable Modal (Now using React Portal) ─────────────────────────────
 function PolaroidModal({ thought, onClose }: { thought: Thought; onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -52,11 +54,33 @@ function PolaroidModal({ thought, onClose }: { thought: Thought; onClose: () => 
     ? "0 1px 3px rgba(255,255,255,0.8)"
     : "0 1px 4px rgba(0,0,0,0.85), 0 0 2px rgba(0,0,0,0.9)";
 
-  // ── 3D Rotation Interaction ───────────────────────────────────────────
+  // Ensure portal only renders on client side to avoid Next.js hydration errors
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // ── Lock Body Scroll ──
+  useEffect(() => {
+    if (!mounted) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden"; // Prevents background scrolling
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [mounted]);
+
+  // ── Keyboard Support ──
+  const handleKey = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [handleKey]);
+
+  // ── 3D Rotation Interaction ──
   const handlePointerDown = (e: React.PointerEvent) => {
-    // Prevent dragging if they click the close button
-    if ((e.target as HTMLElement).closest("button")) return;
-    
     e.currentTarget.setPointerCapture(e.pointerId);
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
@@ -64,16 +88,14 @@ function PolaroidModal({ thought, onClose }: { thought: Thought; onClose: () => 
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging) return;
-    
     const dx = e.clientX - dragStart.x;
     const dy = e.clientY - dragStart.y;
 
-    // Track Y infinitely for full spinning, clamp X to prevent flipping upside down over the top
     const newRotateY = rotation.y + dx * 0.5;
     const newRotateX = Math.max(-35, Math.min(35, rotation.x - dy * 0.5));
 
     setRotation({ x: newRotateX, y: newRotateY });
-    setDragStart({ x: e.clientX, y: e.clientY }); // Reset start to make it continuous delta
+    setDragStart({ x: e.clientX, y: e.clientY });
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
@@ -81,44 +103,36 @@ function PolaroidModal({ thought, onClose }: { thought: Thought; onClose: () => 
     e.currentTarget.releasePointerCapture(e.pointerId);
     setIsDragging(false);
 
-    // Snap to the nearest face (front or back) when released
     const currentY = rotation.y;
     const normalizedY = currentY % 360;
-    let targetY = currentY - normalizedY; // base 360 block
+    let targetY = currentY - normalizedY;
 
     if (normalizedY > 90 && normalizedY <= 270) targetY += 180;
     else if (normalizedY < -90 && normalizedY >= -270) targetY -= 180;
     else if (normalizedY > 270) targetY += 360;
     else if (normalizedY < -270) targetY -= 360;
 
-    setRotation({ x: 0, y: targetY }); // Snaps back to exactly 0 or 180
+    setRotation({ x: 0, y: targetY });
   };
 
-  // ── Keyboard Support ──────────────────────────────────────────────────
-  const handleKey = useCallback((e: KeyboardEvent) => {
-    if (e.key === "Escape") onClose();
-  }, [onClose]);
+  if (!mounted) return null;
 
-  useEffect(() => {
-    document.addEventListener("keydown", handleKey);
-    document.body.style.overflow = "hidden"; // Prevent scrolling behind modal
-    return () => {
-      document.removeEventListener("keydown", handleKey);
-      document.body.style.overflow = "";
-    };
-  }, [handleKey]);
-
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", touchAction: "none" }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      onTouchMove={(e) => e.preventDefault()}
+      className="fixed inset-0 z-9999 flex flex-col items-center justify-center overflow-hidden"
+      style={{ touchAction: "none" }} // Strictly disables mobile pull-to-refresh & swipe scrolling
     >
-      {/* Absolute Close Button */}
+      {/* ── Dark Blurred Backdrop ── */}
+      <div 
+        className="absolute inset-0 bg-black/85 backdrop-blur-md cursor-pointer" 
+        onClick={onClose}
+        title="Click background to close"
+      />
+
+      {/* ── Prominent Close Button ── */}
       <button
         onClick={onClose}
-        className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/30 active:bg-white/40 text-white flex items-center justify-center transition-colors z-50 backdrop-blur-md"
+        className="absolute top-6 right-6 md:top-8 md:right-10 w-12 h-12 rounded-full bg-white/10 border-2 border-white/30 hover:bg-white/20 active:bg-white/30 text-white flex items-center justify-center transition-all z-50 shadow-2xl backdrop-blur-xl"
         title="Close (Esc)"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="size-6">
@@ -126,9 +140,9 @@ function PolaroidModal({ thought, onClose }: { thought: Thought; onClose: () => 
         </svg>
       </button>
 
-      {/* 3D Scene Wrapper */}
+      {/* ── 3D Scene Wrapper ── */}
       <div
-        className="relative w-[min(85vw,380px)] cursor-grab active:cursor-grabbing select-none"
+        className="relative z-10 w-[min(85vw,360px)] cursor-grab active:cursor-grabbing select-none"
         style={{ perspective: "1200px" }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -141,7 +155,6 @@ function PolaroidModal({ thought, onClose }: { thought: Thought; onClose: () => 
           style={{
             transformStyle: "preserve-3d",
             transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-            // No transition while dragging for instant response; smooth transition when snapping back
             transition: isDragging ? "none" : "transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)",
           }}
         >
@@ -194,7 +207,7 @@ function PolaroidModal({ thought, onClose }: { thought: Thought; onClose: () => 
               <p className="patrick-hand-regular text-gray-500/80 text-xl uppercase tracking-widest border-b border-gray-300 pb-2 mb-2">
                 Memory Captured
               </p>
-              <p className="patrick-hand-regular text-gray-700 text-3xl">
+              <p className="patrick-hand-regular text-gray-700 text-3xl text-center">
                 {new Date(thought.createdAt).toLocaleDateString("en-PH", {
                   month: "long", day: "numeric", year: "numeric"
                 })}
@@ -204,11 +217,15 @@ function PolaroidModal({ thought, onClose }: { thought: Thought; onClose: () => 
         </div>
       </div>
 
-      {/* Drag Hint */}
-      <p className="absolute bottom-12 text-center text-white/50 tracking-widest uppercase text-xs md:text-sm font-bold pointer-events-none drop-shadow-md">
-        {isTouchDevice ? "[ drag to inspect ]" : "[ click & drag to inspect ]"}
-      </p>
-    </div>
+      {/* ── Drag Hint ── */}
+      <div className="absolute bottom-10 md:bottom-12 w-full flex justify-center pointer-events-none z-10">
+        <p className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-full text-white/90 tracking-widest uppercase text-xs font-bold drop-shadow-md">
+          {isTouchDevice ? "Drag to inspect" : "Click & drag to inspect"}
+        </p>
+      </div>
+
+    </div>,
+    document.body // Teleports the modal out of the rotated parent safely
   );
 }
 
@@ -253,7 +270,7 @@ function PolaroidCard({ thought, preview = false }: PolaroidCardProps) {
         }}
         onClick={() => !preview && setModalOpen(true)}
       >
-        <div className="w-full aspect-square overflow-hidden bg-gray-100 relative">
+        <div className="w-full aspect-square overflow-hidden bg-gray-100 relative pointer-events-none">
           <img src={thought.image} alt="polaroid" className="w-full h-full object-cover" />
           {thought.text && (
             <div className={`absolute inset-0 flex flex-col px-2 py-2 ${vJustifyClass[alignV]} ${hAlignClass[alignH]}`}>
