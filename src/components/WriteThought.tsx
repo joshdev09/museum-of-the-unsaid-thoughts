@@ -3,27 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { useThoughts } from "../context/ThoughtsContext";
 import PolaroidCard from "./PolaroidCard";
 import { DEFAULT_IMAGES } from "../assets/defaultImages";
-import { type Thought, type TextAlignH, type TextAlignV } from "../types/thought";
+import { type Thought, type TextAlignH, type TextAlignV, type PolaroidSize, type TextSize } from "../types/thought";
 
-// ── Alignment grid button ─────────────────────────────────────────────────────
+// ── Alignment grid ────────────────────────────────────────────────────────────
 type AlignPos = { h: TextAlignH; v: TextAlignV };
-
 const ALIGN_CELLS: AlignPos[] = [
-  { h: "left",   v: "top"    }, { h: "center", v: "top"    }, { h: "right", v: "top"    },
-  { h: "left",   v: "middle" }, { h: "center", v: "middle" }, { h: "right", v: "middle" },
-  { h: "left",   v: "bottom" }, { h: "center", v: "bottom" }, { h: "right", v: "bottom" },
+  { h: "left", v: "top" }, { h: "center", v: "top" }, { h: "right", v: "top" },
+  { h: "left", v: "middle" }, { h: "center", v: "middle" }, { h: "right", v: "middle" },
+  { h: "left", v: "bottom" }, { h: "center", v: "bottom" }, { h: "right", v: "bottom" },
 ];
 
-function AlignGrid({
-  alignH, alignV,
-  onChange,
-}: {
-  alignH: TextAlignH;
-  alignV: TextAlignV;
+function AlignGrid({ alignH, alignV, onChange }: {
+  alignH: TextAlignH; alignV: TextAlignV;
   onChange: (h: TextAlignH, v: TextAlignV) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-0.75 w-20">
+    <div className="grid grid-cols-3 gap-[3px] w-[76px]">
       {ALIGN_CELLS.map(({ h, v }) => {
         const active = h === alignH && v === alignV;
         return (
@@ -32,9 +27,7 @@ function AlignGrid({
             onClick={() => onChange(h, v)}
             title={`${v} ${h}`}
             className={`w-6 h-6 rounded-sm border transition-all cursor-pointer ${
-              active
-                ? "bg-[#333] border-[#333]"
-                : "bg-white border-[#ccc] hover:border-[#888] hover:bg-[#f0f0f0]"
+              active ? "bg-[#333] border-[#333]" : "bg-white border-[#ccc] hover:border-[#888] hover:bg-[#f0f0f0]"
             }`}
           />
         );
@@ -43,18 +36,121 @@ function AlignGrid({
   );
 }
 
+// ── Text colour swatches ──────────────────────────────────────────────────────
+const TEXT_COLORS = [
+  { hex: "#ffffff", label: "White" },
+  { hex: "#000000", label: "Black" },
+  { hex: "#fde68a", label: "Yellow" },
+  { hex: "#fca5a5", label: "Pink" },
+  { hex: "#6ee7b7", label: "Mint" },
+  { hex: "#93c5fd", label: "Sky" },
+  { hex: "#f97316", label: "Orange" },
+  { hex: "#d8b4fe", label: "Lavender" },
+];
+
+function ColorSwatches({ value, onChange }: { value: string; onChange: (c: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-[5px]">
+      {TEXT_COLORS.map(({ hex, label }) => (
+        <button
+          key={hex}
+          title={label}
+          onClick={() => onChange(hex)}
+          className="w-6 h-6 rounded-full border-2 transition-all cursor-pointer"
+          style={{
+            backgroundColor: hex,
+            borderColor: value === hex ? "#333" : "#ccc",
+            transform: value === hex ? "scale(1.2)" : "scale(1)",
+            boxShadow: value === hex ? "0 0 0 1px #333" : "none",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ── Polaroid size picker ──────────────────────────────────────────────────────
+const SIZES: { value: PolaroidSize; label: string; icon: string }[] = [
+  { value: "sm", label: "Small",  icon: "S" },
+  { value: "md", label: "Medium", icon: "M" },
+  { value: "lg", label: "Large",  icon: "L" },
+];
+
+function SizePicker({ value, onChange }: { value: PolaroidSize; onChange: (s: PolaroidSize) => void }) {
+  return (
+    <div className="flex gap-2">
+      {SIZES.map(({ value: v, label, icon }) => (
+        <button
+          key={v}
+          title={label}
+          onClick={() => onChange(v)}
+          className={`w-8 h-8 rounded border-2 patrick-hand-regular text-sm transition-all cursor-pointer ${
+            value === v
+              ? "bg-[#333] border-[#333] text-white"
+              : "bg-white border-[#ccc] text-[#555] hover:border-[#888]"
+          }`}
+        >
+          {icon}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Text size picker ──────────────────────────────────────────────────────────
+const TEXT_SIZES: { value: TextSize; label: string; display: string }[] = [
+  { value: "xs", label: "Extra small", display: "Aa" },
+  { value: "sm", label: "Small",       display: "Aa" },
+  { value: "md", label: "Medium",      display: "Aa" },
+  { value: "lg", label: "Large",       display: "Aa" },
+];
+
+const textSizeStyle: Record<TextSize, string> = {
+  xs: "text-[10px]",
+  sm: "text-xs",
+  md: "text-sm",
+  lg: "text-base",
+};
+
+function TextSizePicker({ value, onChange }: { value: TextSize; onChange: (s: TextSize) => void }) {
+  return (
+    <div className="flex gap-2 items-end">
+      {TEXT_SIZES.map(({ value: v, label, display }) => (
+        <button
+          key={v}
+          title={label}
+          onClick={() => onChange(v)}
+          className={`rounded border-2 patrick-hand-regular transition-all cursor-pointer flex items-center justify-center ${textSizeStyle[v]} ${
+            value === v
+              ? "bg-[#333] border-[#333] text-white"
+              : "bg-white border-[#ccc] text-[#555] hover:border-[#888]"
+          }`}
+          style={{ width: "2rem", height: "2rem" }}
+        >
+          {display}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 function WriteThought() {
-  const navigate   = useNavigate();
+  const navigate = useNavigate();
   const { addThought } = useThoughts();
-  const fileInputRef   = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedImage, setSelectedImage] = useState<string>(DEFAULT_IMAGES[0].src);
   const [text,          setText         ] = useState("");
   const [alignH,        setAlignH       ] = useState<TextAlignH>("center");
   const [alignV,        setAlignV       ] = useState<TextAlignV>("bottom");
+  const [textColor,     setTextColor    ] = useState("#ffffff");
+  const [polaroidSize,  setPolaroidSize ] = useState<PolaroidSize>("md");
+  const [textSize,      setTextSize     ] = useState<TextSize>("sm");
   const [submitted,     setSubmitted    ] = useState(false);
+  const [submitting,    setSubmitting   ] = useState(false);
+  const [submitError,   setSubmitError  ] = useState<string | null>(null);
 
   const previewThought: Thought = {
     id: "preview",
@@ -62,7 +158,7 @@ function WriteThought() {
     image: selectedImage,
     createdAt: new Date(),
     x: 0, y: 0, rotation: 0,
-    alignH, alignV,
+    alignH, alignV, textColor, polaroidSize, textSize,
   };
 
   const handleUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -70,9 +166,7 @@ function WriteThought() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      if (typeof ev.target?.result === "string") {
-        setSelectedImage(ev.target.result);
-      }
+      if (typeof ev.target?.result === "string") setSelectedImage(ev.target.result);
     };
     reader.readAsDataURL(file);
   };
@@ -82,33 +176,37 @@ function WriteThought() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSubmit = () => {
-    if (!text.trim()) return;
-    addThought({ text: text.trim(), image: selectedImage, alignH, alignV });
-    setSubmitted(true);
-    setTimeout(() => navigate("/"), 1200);
+  const handleSubmit = async () => {
+    if (!text.trim() || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await addThought({ text: text.trim(), image: selectedImage, alignH, alignV, textColor, polaroidSize, textSize });
+      setSubmitted(true);
+      setTimeout(() => navigate("/"), 1200);
+    } catch (e) {
+      setSubmitError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  // Check if current image is custom-uploaded (not in defaults)
   const isCustomUpload = !DEFAULT_IMAGES.some((d) => d.src === selectedImage);
 
   return (
     <div className="min-h-screen bg-[#faf8f5] flex flex-col">
-      
       {/* Header */}
       <header className="flex items-center px-6 py-4 border-b border-[#e0d8cc]">
         <button
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-[#555] hover:text-[#333] transition-colors patrick-hand-regular text-lg cursor-pointer"
+          className="flex items-center gap-2 text-[#555] hover:text-[#333] transition-colors patrick-hand-regular text-lg"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor" className="size-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
           </svg>
           Back
         </button>
-        <h2 className="mx-auto patrick-hand-regular text-2xl text-[#333]">
-          Leave a thought
-        </h2>
+        <h2 className="mx-auto patrick-hand-regular text-2xl text-[#333]">Leave a thought</h2>
       </header>
 
       {/* Two-panel body */}
@@ -116,9 +214,7 @@ function WriteThought() {
 
         {/* LEFT — Preview */}
         <div className="w-full md:w-1/2 flex flex-col items-center justify-center bg-[#f0ebe3] py-10 px-6 gap-4 border-b md:border-b-0 md:border-r border-[#e0d8cc]">
-          <p className="gloria-hallelujah-regular text-[#888] text-xs uppercase tracking-widest mb-2">
-            Preview
-          </p>
+          <p className="gloria-hallelujah-regular text-[#888] text-xs uppercase tracking-widest mb-2">Preview</p>
           <PolaroidCard thought={previewThought} preview />
           <p className="patrick-hand-regular text-[#aaa] text-sm mt-2 text-center">
             This is how your polaroid will look on the wall
@@ -126,14 +222,12 @@ function WriteThought() {
         </div>
 
         {/* RIGHT — Edit panel */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center px-8 py-6 gap-4">
+        <div className="w-full md:w-1/2 flex flex-col justify-center px-8 py-6 gap-4 overflow-y-auto">
 
-          {/* Default images */}
+          {/* Choose a photo */}
           <div>
-            <label className="patrick-hand-regular text-[#555] text-sm block mb-2">
-              Choose a photo
-            </label>
-            <div className="grid grid-cols-3 gap-2 mb-3 max-h-70 overflow-y-auto pr-1">
+            <label className="patrick-hand-regular text-[#555] text-sm block mb-2">Choose a photo</label>
+            <div className="grid grid-cols-3 gap-2 mb-3 max-h-52 overflow-y-auto pr-1">
               {DEFAULT_IMAGES.map((img) => (
                 <button
                   key={img.id}
@@ -161,8 +255,6 @@ function WriteThought() {
                 </svg>
                 Upload your own photo
               </button>
-
-              {/* Remove photo — only shown when a custom upload is active */}
               {isCustomUpload && (
                 <button
                   onClick={handleRemovePhoto}
@@ -175,61 +267,82 @@ function WriteThought() {
                 </button>
               )}
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleUpload}
-              className="hidden"
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
           </div>
 
-          {/* Text input */}
+          {/* Your thought */}
           <div>
-            <label className="patrick-hand-regular text-[#555] text-sm block mb-1">
-              Your thought
-            </label>
+            <label className="patrick-hand-regular text-[#555] text-sm block mb-1">Your thought</label>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={3}
               maxLength={200}
               placeholder="Write what you never got to say..."
-              className="w-full h-30 border border-[#ccc] rounded-lg px-4 py-2 gloria-hallelujah-regular text-[#333] text-sm resize-none focus:outline-none focus:border-[#555] bg-white placeholder:text-[#bbb]"
+              className="w-full border border-[#ccc] rounded-lg px-4 py-2 gloria-hallelujah-regular text-[#333] text-sm resize-none focus:outline-none focus:border-[#555] bg-white placeholder:text-[#bbb]"
             />
-            <p className="text-right text-xs text-[#bbb] mt-0.5 patrick-hand-regular">
-              {text.length} / 200
-            </p>
+            <p className="text-right text-xs text-[#bbb] mt-0.5 patrick-hand-regular">{text.length} / 200</p>
           </div>
 
-          {/* Text position */}
-          <div>
-            <label className="patrick-hand-regular text-[#555] text-sm block mb-2">
-              Text position
-            </label>
-            <AlignGrid
-              alignH={alignH}
-              alignV={alignV}
-              onChange={(h, v) => { setAlignH(h); setAlignV(v); }}
-            />
-            <p className="patrick-hand-regular text-[#bbb] text-xs mt-1 capitalize">
-              {alignV} · {alignH}
-            </p>
+          {/* ── Controls row: position · colour · size ── */}
+          <div className="flex flex-wrap gap-6 items-start">
+
+            {/* Text position */}
+            <div>
+              <p className="patrick-hand-regular text-[#555] text-sm mb-2">Text position</p>
+              <AlignGrid
+                alignH={alignH}
+                alignV={alignV}
+                onChange={(h, v) => { setAlignH(h); setAlignV(v); }}
+              />
+              <p className="patrick-hand-regular text-[#bbb] text-xs mt-1 capitalize">{alignV} · {alignH}</p>
+            </div>
+
+            {/* Text colour */}
+            <div>
+              <p className="patrick-hand-regular text-[#555] text-sm mb-2">Text color</p>
+              <ColorSwatches value={textColor} onChange={setTextColor} />
+              <p className="patrick-hand-regular text-[#bbb] text-xs mt-1">{textColor}</p>
+            </div>
+
+            {/* Polaroid size */}
+            <div>
+              <p className="patrick-hand-regular text-[#555] text-sm mb-2">Polaroid size</p>
+              <SizePicker value={polaroidSize} onChange={setPolaroidSize} />
+              <p className="patrick-hand-regular text-[#bbb] text-xs mt-1 capitalize">
+                {SIZES.find(s => s.value === polaroidSize)?.label}
+              </p>
+            </div>
+
+            {/* Text size */}
+            <div>
+              <p className="patrick-hand-regular text-[#555] text-sm mb-2">Text size</p>
+              <TextSizePicker value={textSize} onChange={setTextSize} />
+              <p className="patrick-hand-regular text-[#bbb] text-xs mt-1 capitalize">
+                {TEXT_SIZES.find(s => s.value === textSize)?.label}
+              </p>
+            </div>
+
           </div>
 
           {/* Submit */}
+          {submitError && (
+            <p className="text-red-400 text-xs patrick-hand-regular text-center">{submitError}</p>
+          )}
           <button
             onClick={handleSubmit}
-            disabled={!text.trim() || submitted}
+            disabled={!text.trim() || submitted || submitting}
             className={`w-full py-2 rounded-full patrick-hand-regular text-base transition-all duration-300 ${
               submitted
                 ? "bg-green-500 text-white"
+                : submitting
+                ? "bg-[#888] text-white cursor-wait"
                 : text.trim()
                 ? "bg-[#333] text-white hover:bg-[#555] cursor-pointer"
                 : "bg-[#ddd] text-[#aaa] cursor-not-allowed"
             }`}
           >
-            {submitted ? "✓ Posted to the wall" : "Post to the wall"}
+            {submitted ? "✓ Posted to the wall" : submitting ? "Posting..." : "Post to the wall"}
           </button>
         </div>
       </div>
