@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useThoughts } from "../context/ThoughtsContext";
 import PolaroidCard from "./PolaroidCard";
-import "../scrollbar.css";
+import "../App.css";
 
 function MainScreen() {
   const navigate = useNavigate();
