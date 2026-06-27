@@ -30,7 +30,8 @@ function RantPage() {
 
   const p = PALETTE_CONFIG[rant.palette];
   const f = FONT_CONFIG[rant.font];
-  const isPreset = rant.palette.startsWith("preset-");
+  
+  // REMOVED: const isPreset = rant.palette.startsWith("preset-");
 
   const date = new Date(rant.createdAt);
   const timeAgo = () => {

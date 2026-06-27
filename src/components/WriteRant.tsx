@@ -41,7 +41,8 @@ export function RantPreviewCard({
 }) {
   const p = PALETTE_CONFIG[palette];
   const f = FONT_CONFIG[font];
-  const isPreset = palette.startsWith("preset-");
+
+  // REMOVED: const isPreset = palette.startsWith("preset-");
 
   // Time-ago helper
   const timeAgo = (date: Date) => {
