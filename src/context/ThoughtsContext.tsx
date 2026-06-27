@@ -10,6 +10,7 @@ interface ThoughtsContextType {
   addThought: (
     data: Omit<Thought, "id" | "createdAt" | "x" | "y" | "rotation">
   ) => Promise<void>;
+  deleteThought: (id: string, adminKey: string) => Promise<void>;
 }
 
 const ThoughtsContext = createContext<ThoughtsContextType | null>(null);
@@ -19,16 +20,20 @@ export function ThoughtsProvider({ children }: { children: ReactNode }) {
   const [loading,  setLoading ] = useState(true);
   const [error,    setError   ] = useState<string | null>(null);
 
-  // ── Load all thoughts on first render ──────────────────────────────────
   useEffect(() => {
     async function load() {
       try {
         const res = await fetch(API);
-        if (!res.ok) throw new Error("Failed to fetch thoughts");
+        if (res.status === 404) { setThoughts([]); return; }
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
         const data: Thought[] = await res.json();
         setThoughts(data.map((t) => ({ ...t, createdAt: new Date(t.createdAt) })));
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Unknown error");
+        if (e instanceof TypeError && e.message.includes("fetch")) {
+          setThoughts([]);
+        } else {
+          setError(e instanceof Error ? e.message : "Unknown error");
+        }
       } finally {
         setLoading(false);
       }
@@ -36,7 +41,6 @@ export function ThoughtsProvider({ children }: { children: ReactNode }) {
     load();
   }, []);
 
-  // ── Add a new thought — POSTs to API, then updates local state ─────────
   const addThought = async (
     data: Omit<Thought, "id" | "createdAt" | "x" | "y" | "rotation">
   ) => {
@@ -44,11 +48,24 @@ export function ThoughtsProvider({ children }: { children: ReactNode }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-    });
+    }).catch(() => null);
+
+    if (!res || res.status === 404) {
+      const local: Thought = {
+        ...data,
+        id: crypto.randomUUID(),
+        createdAt: new Date(),
+        x: Math.random() * 60 + 5,
+        y: Math.random() * 55 + 5,
+        rotation: (Math.random() - 0.5) * 12,
+      };
+      setThoughts((prev) => [local, ...prev]);
+      return;
+    }
 
     if (!res.ok) {
-      const { error } = await res.json();
-      throw new Error(error ?? "Failed to save thought");
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error ?? "Failed to save thought");
     }
 
     const saved: Thought = await res.json();
@@ -58,8 +75,27 @@ export function ThoughtsProvider({ children }: { children: ReactNode }) {
     ]);
   };
 
+  const deleteThought = async (id: string, adminKey: string) => {
+    const res = await fetch(API, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-key": adminKey,
+      },
+      body: JSON.stringify({ id }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error ?? "Failed to delete thought");
+    }
+
+    // Remove from local state immediately
+    setThoughts((prev) => prev.filter((t) => t.id !== id));
+  };
+
   return (
-    <ThoughtsContext.Provider value={{ thoughts, loading, error, addThought }}>
+    <ThoughtsContext.Provider value={{ thoughts, loading, error, addThought, deleteThought }}>
       {children}
     </ThoughtsContext.Provider>
   );

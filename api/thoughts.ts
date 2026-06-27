@@ -3,8 +3,8 @@ import sql from "../src/storage/db.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-key");
   if (req.method === "OPTIONS") return res.status(204).end();
 
   // ── GET — load all polaroids ──────────────────────────────────────────
@@ -32,8 +32,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ── POST — save a new polaroid ────────────────────────────────────────
-  // Image is already uploaded to Supabase Storage by the browser.
-  // We only receive the public URL here — no binary data, no size limit issues.
   if (req.method === "POST") {
     try {
       const { text, image, alignH, alignV, textColor, textSize, polaroidSize } = req.body;
@@ -68,6 +66,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (err) {
       console.error("POST /api/thoughts:", err);
       return res.status(500).json({ error: "Failed to save thought" });
+    }
+  }
+
+  // ── DELETE — remove a polaroid (admin only) ───────────────────────────
+  if (req.method === "DELETE") {
+    // Verify admin key from request header
+    const adminKey = req.headers["x-admin-key"];
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: "ID is required" });
+
+    try {
+      const result = await sql`
+        DELETE FROM thoughts WHERE id = ${id}
+        RETURNING id
+      `;
+      if (result.length === 0) {
+        return res.status(404).json({ error: "Thought not found" });
+      }
+      return res.status(200).json({ deleted: id });
+    } catch (err) {
+      console.error("DELETE /api/thoughts:", err);
+      return res.status(500).json({ error: "Failed to delete thought" });
     }
   }
 
