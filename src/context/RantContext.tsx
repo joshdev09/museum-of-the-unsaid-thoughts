@@ -8,6 +8,7 @@ interface RantContextType {
   loading: boolean;
   error: string | null;
   addRant: (data: Omit<Rant, "id" | "createdAt">) => Promise<Rant>;
+  deleteRant: (id: string, adminKey: string) => Promise<void>; // Added this line
 }
 
 const RantContext = createContext<RantContextType | null>(null);
@@ -43,7 +44,6 @@ export function RantProvider({ children }: { children: ReactNode }) {
     }).catch(() => null);
 
     if (!res || res.status === 404) {
-      // Local fallback for dev
       const local: Rant = { ...data, id: crypto.randomUUID(), createdAt: new Date() };
       setRants((prev) => [local, ...prev]);
       return local;
@@ -58,8 +58,25 @@ export function RantProvider({ children }: { children: ReactNode }) {
     return rant;
   };
 
+  // Added deleteRant function
+  const deleteRant = async (id: string, adminKey: string): Promise<void> => {
+    const res = await fetch(API, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, adminKey }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error ?? "Failed to delete rant");
+    }
+    
+    // Update state to remove it immediately from the UI
+    setRants((prev) => prev.filter((r) => r.id !== id));
+  };
+
   return (
-    <RantContext.Provider value={{ rants, loading, error, addRant }}>
+    <RantContext.Provider value={{ rants, loading, error, addRant, deleteRant }}>
       {children}
     </RantContext.Provider>
   );

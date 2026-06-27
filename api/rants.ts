@@ -3,7 +3,7 @@ import sql from "../src/storage/db.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
 
@@ -36,6 +36,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (err) {
       console.error("POST /api/rants:", err);
       return res.status(500).json({ error: "Failed to save rant" });
+    }
+  }
+
+  // Add this DELETE block
+  if (req.method === "DELETE") {
+    try {
+      const { id, adminKey } = req.body;
+      
+      // Compare the provided key against your Vercel environment variable
+      if (adminKey !== process.env.ADMIN_KEY) {
+        return res.status(401).json({ error: "Unauthorized: Invalid admin key" });
+      }
+      
+      if (!id) return res.status(400).json({ error: "Rant ID is required" });
+
+      await sql`DELETE FROM rants WHERE id = ${id}`;
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      console.error("DELETE /api/rants:", err);
+      return res.status(500).json({ error: "Failed to delete rant" });
     }
   }
 
