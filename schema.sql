@@ -18,3 +18,15 @@ CREATE TABLE IF NOT EXISTS thoughts (
 
 -- Public read index (newest first)
 CREATE INDEX IF NOT EXISTS thoughts_created_at_idx ON thoughts (created_at DESC);
+
+-- ── Rants table ───────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS rants (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title      TEXT        NOT NULL,
+  text       TEXT        NOT NULL,
+  font       TEXT        NOT NULL DEFAULT 'gloria',
+  palette    TEXT        NOT NULL DEFAULT 'parchment',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS rants_created_at_idx ON rants (created_at DESC);
